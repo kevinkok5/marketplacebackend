@@ -22,44 +22,48 @@ class Product_tag(models.Model):
     def __str__(self):
         return self.name
     
-class Delivery_method(models.Model):
-    method = models.CharField(max_length= 100)
+# class Delivery_method(models.Model):
+#     method = models.CharField(max_length= 100)
 
-    def __str__(self):
-        return self.method
+#     def __str__(self):
+#         return self.method
     
 class Product(models.Model):
-    AVAILABILITY_CHOISES = [
-        ("List as Single Item", "single_item"),
-        ("List as In Sotck", "in_stock"),
+    class ProductObjects(models.Manager):
+        def get_queryset(self):
+            return super().get_queryset().filter(status='published')
+
+    DELIVERY_METHODS =[
+        ("meet_in_public", "Meet in public")
     ]
-
+    AVAILABILITY_CHOISES = [
+        ("single_item", "List as Single Item"),
+        ("in_stock", "List as In Stock"),
+    ]
     STATUS_CHOISES = [
-        ('Published', 'published'),
-        ('Draft', 'draft'),
+        ('published', 'Published'),
+        ('draft', 'Draft'),
     ] 
-
     CONDITIONS_CHOICES = [
-        ('New', 'new'),
-        ('Used(Like New)', 'used_like_new'),
-        ('Used(Good)', 'used_good'),
-        ('Used', 'used'),
-
+        ('new', 'New'),
+        ('used_like_new', 'Used(Like New)'),
+        ('used_good', 'Used(Good)'),
+        ('used', 'Used'),
     ]
 
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='products')
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    quantity_available = models.PositiveIntegerField(null=True, blank=True)
-    category = models.ForeignKey(Product_category, on_delete=models.PROTECT, related_name="products")
-    availability_status = models.CharField(max_length=30, choices=AVAILABILITY_CHOISES, default="single_item")
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    # quantity_available = models.PositiveIntegerField(null=True, blank=True)
+    category = models.ForeignKey(Product_category, null=True, blank=True, on_delete=models.PROTECT, related_name="products")
+    availability_status = models.CharField(max_length=30, null=True, blank=True, choices=AVAILABILITY_CHOISES, default="single_item")
     tags = models.ManyToManyField(Product_tag, related_name="tags")
-    delivery_method = models.ManyToManyField(Delivery_method, related_name='products')
+    delivery_method = models.CharField(max_length=30, null=True, blank=True, choices=DELIVERY_METHODS, default="meet_in_public")
     # image_url = models.URLField()
-    condition = models.CharField(max_length=30, choices=CONDITIONS_CHOICES) 
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True) 
+    condition = models.CharField(max_length=30, null=True, blank=True, choices=CONDITIONS_CHOICES) 
+    latitude = models.DecimalField(max_digits=9, null=True, blank=True, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, null=True, blank=True, decimal_places=6) 
        
     status = models.CharField(max_length=20, choices=STATUS_CHOISES, default='published')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -67,8 +71,11 @@ class Product(models.Model):
     id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, primary_key=True)
 
 
+    objects = models.Manager()
+    productobjects = ProductObjects() 
+
     def __str__(self):
-        return self.name
+        return self.status
 
 # class City(models.Model):
 #     name = models.CharField(max_length=100)

@@ -2,6 +2,16 @@ from django.db import models
 from django.contrib.auth import get_user_model
 import uuid
 
+import os
+
+
+
+def product_medias_path(instance, filename):
+    # Get the shop's ID
+    product_id = instance.product.id
+
+    # Generate the file path: shops/shop_id/medias/filename
+    return os.path.join('products', str(product_id), 'medias', filename)
 
 class Parent_category(models.Model):
     name = models.CharField(max_length=100)
@@ -60,7 +70,6 @@ class Product(models.Model):
     availability_status = models.CharField(max_length=30, null=True, blank=True, choices=AVAILABILITY_CHOISES, default="single_item")
     tags = models.ManyToManyField(Product_tag, related_name="tags")
     delivery_method = models.CharField(max_length=30, null=True, blank=True, choices=DELIVERY_METHODS, default="meet_in_public")
-    # image_url = models.URLField()
     condition = models.CharField(max_length=30, null=True, blank=True, choices=CONDITIONS_CHOICES) 
     latitude = models.DecimalField(max_digits=9, null=True, blank=True, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, null=True, blank=True, decimal_places=6) 
@@ -69,13 +78,26 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, primary_key=True)
-
+ 
 
     objects = models.Manager()
     productobjects = ProductObjects() 
 
     def __str__(self):
-        return self.status
+        return self.name
+    
+# class Post(models.Model):
+#     product = models.OneToOneField(Product, null=True, blank=True, related_name='post')
+
+class Media(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='medias')
+    media = models.FileField(default=None, null=True, blank=True, upload_to=product_medias_path)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True, unique=True, editable=False)
+
+    def __str__(self):
+        return self.product.name
 
 # class City(models.Model):
 #     name = models.CharField(max_length=100)

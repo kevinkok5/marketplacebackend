@@ -111,6 +111,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
 ]
 
 ROOT_URLCONF = 'marketplace.urls'
@@ -203,12 +204,10 @@ GRAPHENE = {
 }
 
 AUTHENTICATION_BACKENDS = [
-    # 'users.backends.EmailOrUsernameModelBackend',  # Custom backend
+    'graphql_jwt.backends.JSONWebTokenBackend',  # Correct backend for JWT
     'django.contrib.auth.backends.ModelBackend',  # Default Django backend
-    "graphql_jwt.middleware.JSONWebTokenMiddleware",  # Enable JWT middleware
-
-    # "graphql_auth.backends.GraphQLAuthBackend",   # For GraphQL authentication
 ]
+
 
 # GRAPHQL_AUTH = {
 #     # ..more code

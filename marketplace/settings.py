@@ -38,6 +38,10 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     "corsheaders",
     'rest_framework_swagger',
+    "graphene_django",
+    'polymorphic',
+    "graphql_auth",
+    'graphql_jwt.refresh_token.apps.RefreshTokenConfig',
 
 
     'django.contrib.admin',
@@ -190,8 +194,45 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'static/medias')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
 
+GRAPHENE = { 
+    "SCHEMA": "api.schema.schema",
+    "MIDDLEWARE": [
+        "graphql_jwt.middleware.JSONWebTokenMiddleware",  # Enable JWT middleware
+    ],
+    # "PLAYGROUND": True,  # Uncomment if you want GraphQL Playground
+}
+
 AUTHENTICATION_BACKENDS = [
-    'users.backends.EmailOrUsernameModelBackend',
-    'django.contrib.auth.backends.ModelBackend',
+    # 'users.backends.EmailOrUsernameModelBackend',  # Custom backend
+    'django.contrib.auth.backends.ModelBackend',  # Default Django backend
+    "graphql_jwt.middleware.JSONWebTokenMiddleware",  # Enable JWT middleware
+
+    # "graphql_auth.backends.GraphQLAuthBackend",   # For GraphQL authentication
 ]
+
+# GRAPHQL_AUTH = {
+#     # ..more code
+#     'ALLOW_LOGIN_NOT_VERIFIED': True,
+# }
+
+# GRAPHQL_JWT = {
+#     "JWT_ALLOW_ANY_CLASSES": [
+#         "graphql_auth.mutations.Register",
+#         "graphql_auth.mutations.VerifyAccount",
+#         "graphql_auth.mutations.ResendActivationEmail",
+#         "graphql_auth.mutations.SendPasswordResetEmail",
+#         "graphql_auth.mutations.PasswordReset",
+#         "graphql_auth.mutations.ObtainJSONWebToken",
+#         "graphql_auth.mutations.VerifyToken",
+#         "graphql_auth.mutations.RefreshToken",
+#         "graphql_auth.mutations.RevokeToken",
+#         "graphql_auth.mutations.VerifySecondaryEmail",
+#     ],
+#     "JWT_VERIFY_EXPIRATION": True,
+
+#     # optional
+#     "JWT_LONG_RUNNING_REFRESH_TOKEN": True,
+# }
+
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 

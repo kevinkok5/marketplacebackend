@@ -1,0 +1,85 @@
+[
+    {
+        "model": "users.User",
+        "fields": {
+            "password": "pbkdf2_sha256$180000$nFcBtiqGnWN9$hf58wNg77oT1BlNKRdATVVvBIa69+dz22fL1JKOKTaA=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "user1",
+            "first_name": "",
+            "last_name": "",
+            "email": "user1@email.com",
+            "is_staff": false,
+            "is_active": true
+        }
+    },
+    {
+        "model": "users.User",
+        "fields": {
+            "password": "pbkdf2_sha256$180000$nFcBtiqGnWN9$hf58wNg77oT1BlNKRdATVVvBIa69+dz22fL1JKOKTaA=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "user2",
+            "first_name": "",
+            "last_name": "",
+            "email": "user2@email.com",
+            "is_staff": false,
+            "is_active": true
+        }
+    },
+    {
+        "model": "graphql_auth.userstatus",
+        "fields": {
+            "user": 6,
+            "verified": true,
+            "archived": false,
+            "secondary_email": null
+        }
+    },
+    {
+        "model": "users.User",
+        "fields": {
+            "password": "pbkdf2_sha256$180000$nFcBtiqGnWN9$hf58wNg77oT1BlNKRdATVVvBIa69+dz22fL1JKOKTaA=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "user3",
+            "first_name": "",
+            "last_name": "",
+            "email": "user3@email.com",
+            "is_staff": false,
+            "is_active": true
+        }
+    },
+    {
+        "model": "graphql_auth.userstatus",
+        "fields": {
+            "user": 3,
+            "verified": true,
+            "archived": true,
+            "secondary_email": null
+        }
+    },
+    {
+        "model": "users.User",
+        "fields": {
+            "password": "pbkdf2_sha256$180000$nFcBtiqGnWN9$hf58wNg77oT1BlNKRdATVVvBIa69+dz22fL1JKOKTaA=",
+            "last_login": null,
+            "is_superuser": false,
+            "username": "user4",
+            "first_name": "",
+            "last_name": "",
+            "email": "user4@email.com",
+            "is_staff": false,
+            "is_active": true
+        }
+    },
+    {
+        "model": "graphql_auth.userstatus",
+        "fields": {
+            "user": 4,
+            "verified": true,
+            "archived": false,
+            "secondary_email": "user4_secondary@email.com"
+        }
+    }
+]

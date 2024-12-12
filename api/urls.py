@@ -5,6 +5,11 @@ from rest_framework_simplejwt.views import (
 )
 from rest_framework.schemas import get_schema_view
 from django.views.generic import TemplateView
+# from api.schema import schema
+from django.urls import path
+from graphene_django.views import GraphQLView
+from django.views.decorators.csrf import csrf_exempt
+
  
 
 urlpatterns = [
@@ -18,10 +23,11 @@ urlpatterns = [
     path('token/', views.MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('users/register/', views.CreateUserAPIView.as_view(), name='register'),
-    path('products/create/', views.ProductCreateAPIView.as_view(), name='product-create'),
-    path('products/update/<str:pk>', views.ProductUpdateAPIView.as_view(), name='product-update'),
-    path('products/', views.ProductListAPIView.as_view(), name='products'), 
-    path('products/drafts/',  views.ProductDraftListAPIView.as_view(), name='product-drafts'),
-    path('products/drafts/<str:pk>',  views.ProductDraftRetrieveAPIView.as_view(), name='product-drafts'), 
+    # path('products/create/', views.ProductCreateAPIView.as_view(), name='product-create'),
+    # path('products/update/<str:pk>', views.ProductUpdateAPIView.as_view(), name='product-update'),
+    # path('products/', views.ProductListAPIView.as_view(), name='products'), 
+    # path('products/drafts/',  views.ProductDraftListAPIView.as_view(), name='product-drafts'),
+    # path('products/drafts/<str:pk>',  views.ProductDraftRetrieveAPIView.as_view(), name='product-drafts'), 
+    path("graphql/", csrf_exempt(views.GraphQLView.as_view(graphiql=True))),
  
 ]

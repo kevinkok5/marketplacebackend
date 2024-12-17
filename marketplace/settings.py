@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'api', 
     'product',
     'users',
+    'store',
 ]
 
 REST_FRAMEWORK = {

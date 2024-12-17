@@ -63,7 +63,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(seconds=15),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
@@ -195,17 +195,16 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'static/medias')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
 
-GRAPHENE = { 
+GRAPHENE = {
     "SCHEMA": "api.schema.schema",
     "MIDDLEWARE": [
-        "graphql_jwt.middleware.JSONWebTokenMiddleware",  # Enable JWT middleware
+        "graphql_jwt.middleware.JSONWebTokenMiddleware",
     ],
-    # "PLAYGROUND": True,  # Uncomment if you want GraphQL Playground
 }
 
 AUTHENTICATION_BACKENDS = [
-    'graphql_jwt.backends.JSONWebTokenBackend',  # Correct backend for JWT
-    'django.contrib.auth.backends.ModelBackend',  # Default Django backend
+    "graphql_jwt.backends.JSONWebTokenBackend",  # Required for JWT
+    "django.contrib.auth.backends.ModelBackend",  # Default backend
 ]
 
 
@@ -214,24 +213,16 @@ AUTHENTICATION_BACKENDS = [
 #     'ALLOW_LOGIN_NOT_VERIFIED': True,
 # }
 
-# GRAPHQL_JWT = {
-#     "JWT_ALLOW_ANY_CLASSES": [
-#         "graphql_auth.mutations.Register",
-#         "graphql_auth.mutations.VerifyAccount",
-#         "graphql_auth.mutations.ResendActivationEmail",
-#         "graphql_auth.mutations.SendPasswordResetEmail",
-#         "graphql_auth.mutations.PasswordReset",
-#         "graphql_auth.mutations.ObtainJSONWebToken",
-#         "graphql_auth.mutations.VerifyToken",
-#         "graphql_auth.mutations.RefreshToken",
-#         "graphql_auth.mutations.RevokeToken",
-#         "graphql_auth.mutations.VerifySecondaryEmail",
-#     ],
-#     "JWT_VERIFY_EXPIRATION": True,
-
-#     # optional
-#     "JWT_LONG_RUNNING_REFRESH_TOKEN": True,
-# }
+GRAPHQL_JWT = {
+    "JWT_VERIFY_EXPIRATION": True,
+    "JWT_ALLOW_ANY_CLASSES": [
+        "graphql_auth.mutations.Register",
+        "graphql_auth.mutations.ObtainJSONWebToken",
+        "graphql_auth.mutations.VerifyToken",
+        "graphql_auth.mutations.RefreshToken",
+    ],
+    "JWT_AUTH_HEADER_PREFIX": "Bearer",
+}
 
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 

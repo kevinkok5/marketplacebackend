@@ -2,6 +2,8 @@ from django.shortcuts import get_object_or_404
 from graphene.relay import Node
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.fields import DjangoConnectionField
+from django.db import models
+
 # from graphene_file_upload.scalars import Upload
 # from .serializers import ProductSerializer, MediaSerializer
 # from .models import Product, Media
@@ -12,6 +14,7 @@ import json
 
 
 from graphql import GraphQLError
+
 
 
 
@@ -71,6 +74,15 @@ class Query(user_schema.MeQuery, graphene.ObjectType):
         **{key: graphene.String() for key in ['name', 'make', 'model', 'condition', 'product_status']},
         **{key: graphene.Float() for key in ['price_min', 'price_max']}
     )
+    
+    user_products = graphene.Field(
+        product_schema.ProductConnection,
+        first=graphene.Int(),
+        after=graphene.String(),
+        product_type=graphene.String(),  # Add this argument
+        **{key: graphene.String() for key in ['name', 'make', 'model', 'condition', 'product_status']},
+        **{key: graphene.Float() for key in ['price_min', 'price_max']}
+    )
 
     # all_products = DjangoFilterConnectionField(product_schema.ProductConnection)
 
@@ -117,7 +129,14 @@ class Query(user_schema.MeQuery, graphene.ObjectType):
     # def resolve_all_products(root, info):
     #     return product_model.Product.productobjects.all()
 
+
     def resolve_all_products(self, info, first=None, after=None, product_type=None, **kwargs):
+        user = info.context.user
+
+        # Check if the user is authenticated
+        if not user.is_authenticated:
+            return GraphQLError("Unauthorized")
+
         # Extract filters from kwargs
         status = kwargs.get('product_status')
         price_min = kwargs.get('price_min')
@@ -144,6 +163,15 @@ class Query(user_schema.MeQuery, graphene.ObjectType):
                 products = products.filter(condition=condition)
         else:  # Query all products if no product_type is specified
             products = product_model.Product.objects.all()
+
+        # Apply permission-based filters
+        if user.is_superuser:  # Admins/Superusers can view all products
+            pass
+        elif user.is_authenticated:  # Regular authenticated users
+            products = products.filter(
+                # models.Q(owner=user) | 
+                models.Q(product_status="published")
+            )
 
         # Apply common filters
         if status:
@@ -182,26 +210,114 @@ class Query(user_schema.MeQuery, graphene.ObjectType):
 
 
 
+    def resolve_user_products(self, info, first=None, after=None, product_type=None, **kwargs):
+        user = info.context.user
+
+        # Check if the user is authenticated
+        if not user.is_authenticated:
+            return GraphQLError("Unauthorized")
+
+        # Extract filters from kwargs
+        status = kwargs.get('product_status')
+        price_min = kwargs.get('price_min')
+        price_max = kwargs.get('price_max')
+        name = kwargs.get('name')
+        make = kwargs.get('make')
+        model = kwargs.get('model')
+        condition = kwargs.get('condition')
+
+        # Start with products owned by the user
+        products = product_model.Product.objects.filter(owner=user)
+
+        # Start with a polymorphic query based on `type`
+        if product_type == "Item":
+            products = products.instance_of(product_model.Item)
+            if name:
+                products = products.filter(name__icontains=name)
+            if condition:
+                products = products.filter(condition=condition)
+        elif product_type == "Vehicle":
+            products = products.instance_of(product_model.Vehicle)
+            if make:
+                products = products.filter(make__icontains=make)
+            if model:
+                products = products.filter(model__icontains=model)
+            if condition:
+                products = products.filter(condition=condition)
+
+        # Apply common filters
+        if status:
+            products = products.filter(product_status=status)
+        if price_min is not None:
+            products = products.filter(price__gte=price_min)
+        if price_max is not None:
+            products = products.filter(price__lte=price_max)
+
+        # Prefetch related data for efficiency
+        products = products.prefetch_related('owner', 'category')
+
+        # Pagination logic
+        start_index = 0
+        if after:
+            start_index = int(after)
+
+        end_index = start_index + first if first else len(products)
+        paginated_results = products[start_index:end_index]
+
+        # Create edges for paginated results
+        edges = [
+            product_schema.ProductEdge(node=item, cursor=str(index))
+            for index, item in enumerate(paginated_results, start=start_index)
+        ]
+
+        # Construct PageInfo
+        page_info = graphene.relay.PageInfo(
+            has_next_page=end_index < products.count(),
+            has_previous_page=start_index > 0,
+            start_cursor=str(start_index) if edges else None,
+            end_cursor=str(end_index - 1) if edges else None,
+        )
+
+        return product_schema.ProductConnection(edges=edges, page_info=page_info)
+
+
         
     
     def resolve_product(self, info, id):
-    # Decode the global ID
+        user = info.context.user
+
+        # Check if the user is authenticated
+        if not user.is_authenticated:
+            raise GraphQLError("Unauthorized")
+
+        # Decode the global ID
         try:
             type_name, db_id = Node.resolve_global_id(info, id)
-            print(f"type_name: {type_name} db_id: {db_id}" )
+            print(f"type_name: {type_name} db_id: {db_id}")
         except Exception as e:
             raise ValueError(f"Invalid ID format: {e}")
 
         # Resolve the instance based on the type name
+        product = None
         if type_name == "ItemType":
-            return product_model.Item.objects.get(id=db_id)
+            product = product_model.Item.objects.get(id=db_id)
         elif type_name == "VehicleType":
-            return product_model.Vehicle.objects.get(id=db_id)
+            product = product_model.Vehicle.objects.get(id=db_id)
         elif type_name == "HouseType":
-            return product_model.House.objects.get(id=db_id)
-        
-        # Fallback for invalid type
-        raise ValueError("Invalid type for ProductUnion.")
+            product = product_model.House.objects.get(id=db_id)
+        else:
+            raise ValueError("Invalid type for ProductUnion.")
+
+        # Apply permission checks
+        if product.product_status == "published":
+            return product  # Published products are viewable by anyone
+
+        if product.owner == user:
+            return product  # Owners can view their own products regardless of status
+
+        # Deny access if the user is neither the owner nor the product is published
+        raise GraphQLError("You do not have permission to view this product.")
+
 
 
 

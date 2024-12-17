@@ -114,14 +114,26 @@ class Product(PolymorphicModel):
     #     print("Unknown Type")
     #     return "Unknown"
 
-    # def __str__(self):
-    #     if self.__class__.__name__ == "Product":
-    #         return "ItemType"
-    #     elif isinstance(self, Vehicle):
-    #         return "VehicleType"
-    #     elif isinstance(self, House):
-    #         return "HouseType"
-    #     return "Unknown"
+    def __str__(self):
+        if isinstance(self, Item) or self.product_type == 'item':
+            try:
+                return f"{self.name}({self.product_status})"
+            except Exception as e:
+                return f"{self.product_type}({self.product_status})"
+
+        elif isinstance(self, Vehicle) or self.product_type =='vehicle':
+            try:
+                return f"{self.model} {self.make} ({self.product_status})"
+            except Exception as e:
+                return f"{self.product_type}({self.product_status})"
+            
+        elif isinstance(self, House) or self.product_type == 'house':
+            try:
+                return f"House({self.product_status})"
+            except Exception as e:
+                return f"{self.product_type}({self.product_status})"
+            
+        return f"{self.product_type}({self.product_status})"
     
 
 

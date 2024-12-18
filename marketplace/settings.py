@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     "graphene_django",
     'polymorphic',
-    "graphql_auth",
     'graphql_jwt.refresh_token.apps.RefreshTokenConfig',
 
 
@@ -216,12 +215,12 @@ AUTHENTICATION_BACKENDS = [
 
 GRAPHQL_JWT = {
     "JWT_VERIFY_EXPIRATION": True,
-    "JWT_ALLOW_ANY_CLASSES": [
-        "graphql_auth.mutations.Register",
-        "graphql_auth.mutations.ObtainJSONWebToken",
-        "graphql_auth.mutations.VerifyToken",
-        "graphql_auth.mutations.RefreshToken",
-    ],
+    # "JWT_ALLOW_ANY_CLASSES": [
+    #     "graphql_auth.mutations.Register",
+    #     "graphql_auth.mutations.ObtainJSONWebToken",
+    #     "graphql_auth.mutations.VerifyToken",
+    #     "graphql_auth.mutations.RefreshToken",
+    # ],
     "JWT_AUTH_HEADER_PREFIX": "Bearer",
 }
 

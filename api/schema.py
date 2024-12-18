@@ -27,8 +27,8 @@ from product import models as product_model
 from product import serializers as product_serializers
 
 
-from graphql_auth.schema import UserQuery, MeQuery
-from graphql_auth import mutations
+# from graphql_auth.schema import UserQuery, MeQuery
+# from graphql_auth import mutations
 
 # class AuthMutation(graphene.ObjectType):
 #     register = mutations.Register.Field()

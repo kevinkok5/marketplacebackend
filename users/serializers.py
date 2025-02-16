@@ -7,7 +7,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ['first_name', 'email', 'password', 'confirm_password']  # Include confirm_password field
+        fields = ['first_name', 'email','username', 'password', 'confirm_password']  # Include confirm_password field
         
 
     def validate(self, data):
@@ -18,7 +18,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = get_user_model().objects.create(
             first_name=validated_data['first_name'],
-            # username = validated_data['username'],
+            username = validated_data['username'],
             email = validated_data['email'],
         )
 

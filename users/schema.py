@@ -1,32 +1,41 @@
 from graphene.relay import Node
 from graphene_django import DjangoObjectType
-from .models import User
+from django.contrib.auth import get_user_model
 import graphene
 import graphql_jwt
 # from graphene_django.types import DjangoObjectType
 
 
 
+
 # Define the UserType with the Node interface for global ID support
 class UserType(DjangoObjectType):
     class Meta:
-        model = User
+        model = get_user_model()
         interfaces = (Node,)
-        fields = ( "id", "email", "first_name", "is_active", "last_name", "username", "date_joined", "is_staff", "is_superuser", "last_login", "products" )
+        fields = ( "id", "email", "first_name", "is_active", "last_name", "username", "date_joined", "is_staff", "is_superuser", "last_login", "stores" )
         # fields = ["id", "first_Name"]
         filter_fields = {
             'first_name': ['exact', 'icontains', 'istartswith'],       
         }
 
 class MeType(DjangoObjectType):
+    is_shop_owner =  graphene.Boolean()
+
     class Meta:
-        model = User
-        # interfaces = (Node,)
-        fields = ( "id", "email", "first_name", "is_active", "last_name", "username", "date_joined", "is_staff", "is_superuser", "last_login", "products" )
-        # fields = ["id", "first_Name"]
+        model = get_user_model()
+        interfaces = (Node,)
+        fields = ["id", "email", "first_name", "is_active", "last_name", "username", "date_joined", "is_staff", "is_superuser", "last_login", 'stores' ]
+        # exclude = ("model",)  # Exclude unintended fields
+
         filter_fields = {
             'first_name': ['exact', 'icontains', 'istartswith'],       
         }
+    
+    def resolve_is_shop_owner(self, info):
+        user = info.context.user
+        return user.groups.filter(name='shop_owners').exists()
+        
     
 
 
@@ -47,12 +56,13 @@ class AuthMutations(graphene.ObjectType):
     refresh_token = graphql_jwt.Refresh.Field()
 
 class MeQuery(graphene.ObjectType):
-    me = graphene.Field(UserType)
+    me = graphene.Field(MeType)
 
     def resolve_me(self, info):
         user = info.context.user
         if not user.is_authenticated:
             return None
+
         return user
 
 # schema = graphene.Schema(query=Query, mutation=AuthMutations)

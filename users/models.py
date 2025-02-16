@@ -1,5 +1,7 @@
 from django.db import models
 from django.apps import apps
+import uuid
+
 
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.translation import gettext_lazy as _
@@ -7,7 +9,14 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 
-
+def generate_unique_username(email):
+    base_username = email.split('@')[0]
+    suffix = 1
+    unique_username = base_username
+    while get_user_model().objects.filter(username=unique_username).exists():
+        unique_username = f"{base_username}{suffix}"
+        suffix += 1
+    return unique_username
 
 
 # Create your models here.
@@ -37,10 +46,10 @@ class CustomUserManager(BaseUserManager):
                 raise ValidationError({'username': 'A user with that username already exists.'})
 
 
-        GlobalUserModel = apps.get_model(
-            self.model._meta.app_label, self.model._meta.object_name
-        )
-        username = GlobalUserModel.normalize_username(username)
+        # GlobalUserModel = apps.get_model(
+        #     self.model._meta.app_label, self.model._meta.object_name
+        # )
+        # username = GlobalUserModel.normalize_username(username)
         user = self.model(first_name=first_name, username=username, email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -88,13 +97,7 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         if not self.username:
-            # Generate username based on the email if not provided
-            self.username = self.email.split('@')[0]
-            suffix = 1
-            while get_user_model().objects.filter(username=str(self.username)).exists():
-                # If username exists, append a suffix to make it unique
-                self.username = f"{self.username}{suffix}"
-                suffix += 1
+            self.username = generate_unique_username(self.email)
         super().save(*args, **kwargs)
 
     
@@ -110,6 +113,21 @@ class User(AbstractUser):
     #             self.username = f"{self.username}{suffix}"
     #             suffix += 1
     #     super().save(*args, **kwargs)
+
+
+
+    
+# class TypeOfUser(models.Model):
+#     TYPE_OPTIONS = [
+#         ('shop_onwer', 'Shop_Owner'), 
+#         ('blocked', 'Blocked'),
+#     ]
+#     user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)
+#     is_type = models.CharField(max_length=20, choices=TYPE_OPTIONS, default='owner')
+
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+#     id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, primary_key=True)
 
 
 

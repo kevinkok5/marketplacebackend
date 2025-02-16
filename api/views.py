@@ -9,37 +9,105 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from users.serializers import CreateUserSerializer
 from rest_framework.generics import CreateAPIView, ListAPIView, DestroyAPIView, RetrieveAPIView, UpdateAPIView
-from product.models import Product
+from store.models import Product
 # from product.serializers import ProductSerializer
 from django.core.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 import json
 from django.db import transaction
+from django.shortcuts import get_object_or_404
+from store.models import Store
+from graphene.relay import Node
+from graphql import GraphQLError
 
 from graphene_django.views import GraphQLView as BaseGraphQLView
+from django.apps import apps
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
+from graphene_file_upload.django import FileUploadGraphQLView
 
 
-class GraphQLView(BaseGraphQLView):
 
+
+class GraphQLView(FileUploadGraphQLView):
     @staticmethod
     def format_error(error):
         formatted_error = super(GraphQLView, GraphQLView).format_error(error)
+        print("error: ", error)
 
         try:
-            formatted_error['context'] = error.original_error.context
-        except AttributeError:
-            pass
- 
+            formatted_error["message"] = str(error)
+            
+            # Ensure extensions from GraphQLError are included
+            if isinstance(error, GraphQLError) and error.extensions:
+                formatted_error["extensions"] = error.extensions
+            elif hasattr(error, "original_error") and error.original_error:
+                formatted_error["extensions"] = {
+                    "code": getattr(error.original_error, "code", "INTERNAL_SERVER_ERROR"),
+                    "details": str(error.original_error),
+                }
+        except Exception as e:
+            formatted_error["message"] = f"An error occurred while formatting: {e}"
+
         return formatted_error
+
+    def get_context(self, request):
+
+        # Call the parent method to get the default context
+        context = super().get_context(request)
+        context.store = None
+
+        # Retrieve store model and header name from settings
+        store_model_path = getattr(settings, "GRAPHQL_STORE_MODEL", None)
+        store_id_header = getattr(settings, "GRAPHQL_STORE_ID_HEADER", "x-store-id")
+
+        if not store_model_path:
+            raise ImproperlyConfigured("GRAPHQL_STORE_MODEL setting is not configured.")
+
+        # Dynamically get the Store model
+        try:
+            store_model = apps.get_model(store_model_path)
+        except LookupError:
+            raise ImproperlyConfigured(f"Invalid model path: {store_model_path}")
+         
+        # Extract store ID from the headers
+        store_id = request.headers.get(store_id_header)
+
+        # store_id = "U3RvcmVUeXBlOjU4NWM0NzNkLTQwODQtNDExYy04ZGU1LTFkZmI5M2NhZmQ1Ng=="
+
+        # Validate the store and attach it to the context
+        # print(
+        #     "store_id: ", store_id
+        # )
+        if store_id:
+            # Decode the global ID
+            try:
+                type_name, db_id = Node.resolve_global_id(request, store_id)
+            except Exception as e:
+                raise ValueError(f"Invalid ID format: {e}")
+            
+            try:
+              
+                store = get_object_or_404(store_model, id=db_id)
+                context.store = store
+            except Exception:
+                context.store = None
+        # print("store_id: ", context.store.id)
+
+        return context
+    
     
 
-class APIException(Exception):
 
-    def __init__(self, message, status=None):
-        self.context = {}
-        if status:
-            self.context['status'] = status
-        super().__init__(message)
+    
+
+# class APIException(Exception):
+
+#     def __init__(self, message, status=None):
+#         self.context = {}
+#         if status:
+#             self.context['status'] = status
+#         super().__init__(message)
 
 
 
@@ -78,6 +146,7 @@ class CreateUserAPIView(APIView):
     user = None
 
     def post(user, request):
+        print("Creating user: ", request.data)
         serializer = CreateUserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()  # Serializer's save method creates the user
@@ -90,6 +159,7 @@ class CreateUserAPIView(APIView):
             }
             return Response(token, status=status.HTTP_201_CREATED)
         else:
+            print("Error creating user: ", serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 

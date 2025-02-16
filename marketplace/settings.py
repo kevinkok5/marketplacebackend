@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 import os
+from corsheaders.defaults import default_headers
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,6 +32,10 @@ DEBUG = True
 ALLOWED_HOSTS = []
 CORS_ALLOW_ALL_ORIGINS = True
 
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'x-store-id',
+]
+
 
 # Application definition
 
@@ -41,6 +47,8 @@ INSTALLED_APPS = [
     "graphene_django",
     'polymorphic',
     'graphql_jwt.refresh_token.apps.RefreshTokenConfig',
+    'graphene_file_upload',
+    'channels',
 
 
     'django.contrib.admin',
@@ -51,9 +59,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'api', 
-    'product',
-    'users',
     'store',
+    'users',
+    'chat',
 ]
 
 REST_FRAMEWORK = {
@@ -133,6 +141,14 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'marketplace.wsgi.application'
+ASGI_APPLICATION = "marketplace.asgi.application"
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+
 
 
 # Database
@@ -226,3 +242,7 @@ GRAPHQL_JWT = {
 
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
+
+# Configure the GraphQL Store Model and Store ID name to be pass in the Header
+GRAPHQL_STORE_MODEL = "store.Store"  # Replace with your app's Store model
+GRAPHQL_STORE_ID_HEADER = "x-store-id"  # Header name for store ID

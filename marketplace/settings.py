@@ -29,8 +29,13 @@ SECRET_KEY = 'django-insecure-ftl^b-y+xmlgi=y4e1o*i1xal89d%k3o@y*2)y0h4t7$z6br3j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-CORS_ALLOW_ALL_ORIGINS = True
+ALLOWED_HOSTS = ["127.0.0.1", "192.168.0.143"] 
+CORS_ALLOW_ALL_ORIGINS = True # Désactiver en production
+CORS_ALLOW_CREDENTIALS = True
+
+
+# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:8000, http://192.168.0.143:8000"]
 
 CORS_ALLOW_HEADERS = list(default_headers) + [
     'x-store-id',
@@ -40,6 +45,8 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",  # Add Daphne
+    "channels",  # Add Django Channels
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     "corsheaders",
@@ -48,7 +55,6 @@ INSTALLED_APPS = [
     'polymorphic',
     'graphql_jwt.refresh_token.apps.RefreshTokenConfig',
     'graphene_file_upload',
-    'channels',
 
 
     'django.contrib.admin',
@@ -113,6 +119,7 @@ SIMPLE_JWT = {
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    # "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -123,6 +130,13 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'marketplace.urls'
+ASGI_APPLICATION = "marketplace.asgi.application"
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
 
 TEMPLATES = [
     {
@@ -141,13 +155,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'marketplace.wsgi.application'
-ASGI_APPLICATION = "marketplace.asgi.application"
 
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
-    },
-}
 
 
 
@@ -246,3 +254,6 @@ GRAPHQL_JWT = {
 # Configure the GraphQL Store Model and Store ID name to be pass in the Header
 GRAPHQL_STORE_MODEL = "store.Store"  # Replace with your app's Store model
 GRAPHQL_STORE_ID_HEADER = "x-store-id"  # Header name for store ID
+SITE_URL= "http://127.0.0.1:8000" # This should be updated in production
+
+DEFAULT_RUNSERVER_CLASS = "daphne.server.Command" 

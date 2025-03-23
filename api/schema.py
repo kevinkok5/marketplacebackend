@@ -4,22 +4,11 @@ from graphene_django.filter import DjangoFilterConnectionField
 from django.contrib.auth import get_user_model
 
 
-# from graphene_file_upload.scalars import Upload
-# from .serializers import ProductSerializer, MediaSerializer
-# from .models import Product, Media
-# from graphql import GraphQLError
-# from .views import  APIException
-
-
-
-
-
-
-
 import graphene
 from users import schema as user_schema
 from users import models as user_model
 from store.schema import queries as store_queries, mutations as store_mutations
+from chat.schema import queries as chat_queries, mutations as chat_mutations
 
 
 
@@ -50,17 +39,14 @@ from store.schema import queries as store_queries, mutations as store_mutations
 #     revoke_token = mutations.RevokeToken.Field()
 
 
-class Query(user_schema.MeQuery, store_queries.StoreQueries, graphene.ObjectType):
+class Query(user_schema.MeQuery, store_queries.StoreQueries, chat_queries.ChatQueries, graphene.ObjectType):
+# class Query(user_schema.MeQuery, store_queries.StoreQueries, graphene.ObjectType):
     all_users = DjangoFilterConnectionField(user_schema.UserType)
     user = graphene.Field(user_schema.UserType, id=graphene.ID(required=True))  # global ID is passed
-
-    
-
     # me = graphene.Field(user_schema.MeType)  # global ID is passed
    
     def resolve_all_users(root, info, **kwargs):
         return get_user_model().objects.all()
-
 
     def resolve_user(root, info, id):
         # return get_object_or_404(userModel.User, id=id)
@@ -69,7 +55,8 @@ class Query(user_schema.MeQuery, store_queries.StoreQueries, graphene.ObjectType
 
 
     
-class Mutation(user_schema.AuthMutations, graphene.ObjectType):
+class Mutation(user_schema.AuthMutations, chat_mutations.ChatMutations, graphene.ObjectType):
+# class Mutation(user_schema.AuthMutations, graphene.ObjectType):
     create_store = store_mutations.CreateStore.Field()
     become_shop_owner = store_mutations.BecomeShopOwner.Field()
     create_product = store_mutations.CreateProduct.Field()

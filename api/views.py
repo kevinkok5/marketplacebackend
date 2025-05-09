@@ -146,7 +146,7 @@ class CreateUserAPIView(APIView):
     user = None
 
     def post(user, request):
-        print("Creating user: ", request.data)
+        # print("Creating user: ", request.data)
         serializer = CreateUserSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()  # Serializer's save method creates the user

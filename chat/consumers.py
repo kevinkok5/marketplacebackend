@@ -432,7 +432,7 @@ class StartCoversationConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def authenticate_user(self, token):
         try:
-            auth = JWTAuthentication()
+            auth = JWTAuthentication() 
             validated_token = auth.get_validated_token(token)
             return auth.get_user(validated_token)
         except Exception as e:
